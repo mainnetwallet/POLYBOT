@@ -162,7 +162,7 @@ class App:
     async def start(self) -> None:
         logger.info("POLYBOT starting in %s mode", self.mode)
         self.wire()
-        await self.db.initialize()
+        self.db.initialize()
 
         # Disaster recovery startup sequence.
         rec = await self.recovery.recover()

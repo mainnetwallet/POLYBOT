@@ -25,10 +25,15 @@ logging.basicConfig(
 logger = logging.getLogger("polybot.main")
 
 
+_app: App | None = None
+
+
 async def run() -> None:
+    global _app
     settings = load_settings()
     db = Database("data/polybot.db")
     app = App(settings=settings, db=db)
+    _app = app
 
     dashboard = create_app(app)
 
@@ -57,9 +62,10 @@ def main() -> int:
         logger.info("Interrupted by user")
     finally:
         try:
-            loop.run_until_complete(Database("data/polybot.db").close())
+            if _app is not None:
+                loop.run_until_complete(_app.stop())
         except Exception:
-            pass
+            logger.exception("Error during shutdown")
         loop.close()
     return 0
 
