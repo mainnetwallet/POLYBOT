@@ -125,6 +125,11 @@ class FeedManager:
 
     async def _on_primary_tick(self, envelope: dict) -> None:
         tick = envelope["tick"]
+        if isinstance(tick, TWAPTick):
+            # TWAP channel ticks arrive on the primary connection; keep them
+            # separate so they never overwrite the spot price tick.
+            self._set_twap(tick)
+            return
         self._primary_tick = tick
         self._last_health_report.primary = self.primary.channel_health(
             "price.crypto", {"symbol": self.config.primary_symbol}

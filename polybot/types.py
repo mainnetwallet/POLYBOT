@@ -209,6 +209,7 @@ class TWAPTick:
     remaining_window_seconds: Optional[int] = None
     data_age_ms: Optional[int] = None
     quality_flags: list[str] = field(default_factory=list)
+    raw: dict = field(default_factory=dict)
 
 
 @dataclass
