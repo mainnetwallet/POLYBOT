@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POLYBOT — Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">POLYBOT</div>
+  <div class="meta" id="meta">mode: <span id="mode">—</span> &bull; ready: <span id="ready">—</span></div>
+  <a href="/logout" class="btn-outline">Sign out</a>
+</header>
+
+<nav class="tabs">
+  <a href="#" class="tab active" data-tab="overview">Overview</a>
+  <a href="#" class="tab" data-tab="markets">Markets</a>
+  <a href="#" class="tab" data-tab="positions">Positions</a>
+  <a href="#" class="tab" data-tab="risk">Risk</a>
+  <a href="#" class="tab" data-tab="system">System</a>
+</nav>
+
+<section class="panel" id="tab-overview">
+  <div class="grid">
+    <div class="card">
+      <h3>Account</h3>
+      <div class="kv" id="account-kv">loading…</div>
+    </div>
+    <div class="card">
+      <h3>Market</h3>
+      <div class="kv" id="market-kv">loading…</div>
+    </div>
+    <div class="card">
+      <h3>Strategy</h3>
+      <div class="kv" id="strategy-kv">loading…</div>
+    </div>
+    <div class="card">
+      <h3>Position</h3>
+      <div class="kv" id="position-kv">loading…</div>
+    </div>
+    <div class="card">
+      <h3>System</h3>
+      <div class="kv" id="system-kv">loading…</div>
+    </div>
+    <div class="card">
+      <h3>Controls</h3>
+      <div class="controls" id="controls">loading…</div>
+    </div>
+  </div>
+</section>
+
+<section class="panel hidden" id="tab-markets">
+  <h3>Markets</h3>
+  <div id="markets-list">loading…</div>
+</section>
+
+<section class="panel hidden" id="tab-positions">
+  <h3>Positions</h3>
+  <div id="positions-list">loading…</div>
+</section>
+
+<section class="panel hidden" id="tab-risk">
+  <h3>Risk</h3>
+  <div id="risk-detail">loading…</div>
+</section>
+
+<section class="panel hidden" id="tab-system">
+  <h3>System</h3>
+  <div id="system-detail">loading…</div>
+</section>
+
+<script>
+const csrf = document.currentScript ? null : null;
+let csrfToken = "{% csrf %}";
+async function loadState(){
+  const res = await fetch("/api/state", {headers:{"X-CSRF-Token": csrfToken}});
+  const s = await res.json();
+  render(s);
+}
+function render(s){
+  document.getElementById("mode").textContent = s.mode || "—";
+  document.getElementById("ready").textContent = s.ready ? "yes" : "no";
+  const f = s.feeds || {};
+  const r = s.risk || {};
+  document.getElementById("account-kv").innerHTML = kv([
+    ["Mode", s.mode], ["Ready", s.ready], ["Markets", s.markets], ["Positions", s.positions]
+  ]);
+  document.getElementById("market-kv").innerHTML = kv([
+    ["BTC feed", f.primary], ["TWAP", f.twap], ["Overall", f.overall], ["Block entries", f.block_entries], ["Reason", f.reason]
+  ]);
+  document.getElementById("strategy-kv").innerHTML = kv([
+    ["Entry window", "120s"], ["Min prob", "60%"], ["Min net edge", "5%"], ["Max spread", "$0.03"]
+  ]);
+  document.getElementById("position-kv").innerHTML = kv([]);
+  document.getElementById("system-kv").innerHTML = kv([
+    ["Daily P&L", r.daily_pnl_usd], ["Daily loss", r.daily_loss_usd], ["Reserved", r.reserved_usd], ["Exposure", r.exposure_usd], ["Within limits", r.within_limits]
+  ]);
+  const lg = s.live_gate || {};
+  document.getElementById("controls").innerHTML = controlsHtml(lg);
+  document.getElementById("risk-detail").innerHTML = kv(Object.entries(r).map(([k,v])=>[k,v]));
+}
+function kv(pairs){
+  return pairs.map(([k,v])=>`<div class="kvrow"><b>${k}:</b> <span>${v}</span></div>`).join("");
+}
+function controlsHtml(lg){
+  let html = `<p>LIVE gate: <b>${lg.passed ? "passed" : "failed"}</b></p>`;
+  if(lg.reason) html += `<p style="color:#a33;font-size:12px">${lg.reason}</p>`;
+  html += `<div class="liveconfirm" id="liveconfirm">
+    <label>Type <b>LIVE</b> to activate real-money trading:</label>
+    <input id="liveinput" type="text" maxlength="4">
+    <button id="livebtn" onclick="confirmLive()">Confirm LIVE</button>
+    <div id="liveresult"></div>
+  </div>`;
+  html += `<button class="btn-danger" onclick="emergencyStop()">Emergency Stop</button>
+    <button class="btn-danger" onclick="stopBot()">Stop Bot</button>`;
+  return html;
+}
+async function confirmLive(){
+  const v = document.getElementById("liveinput").value;
+  const res = await fetch("/api/live/confirm", {method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded","X-CSRF-Token":csrfToken}, body:"confirmation="+encodeURIComponent(v)});
+  const j = await res.json();
+  document.getElementById("liveresult").textContent = j.confirmed ? "confirmed" : "failed";
+  if(j.confirmed){
+    const a = await fetch("/api/live/activate", {method:"POST", headers:{"X-CSRF-Token":csrfToken}});
+    const aj = await a.json();
+    document.getElementById("liveresult").textContent = aj.activated ? "LIVE activated" : ("not activated: "+aj.reason);
+    loadState();
+  }
+}
+async function emergencyStop(){
+  await fetch("/api/emergency-stop", {method:"POST", headers:{"X-CSRF-Token":csrfToken}});
+  document.getElementById("liveresult").textContent = "EMERGENCY STOP sent";
+}
+async function stopBot(){
+  await fetch("/api/stop", {method:"POST", headers:{"X-CSRF-Token":csrfToken}});
+  document.getElementById("liveresult").textContent = "stop sent";
+}
+function tab(el){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  document.querySelectorAll(".panel").forEach(p=>p.classList.add("hidden"));
+  document.getElementById("tab-"+el.dataset.tab).classList.remove("hidden");
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>tab(t));
+setInterval(loadState, 2000);
+loadState();
+</script>
+</body>
+</html>

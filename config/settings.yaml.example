@@ -1,0 +1,72 @@
+# POLYBOT trading configuration
+# Copy to config/settings.yaml and adjust. Capital remains unset until configured.
+
+platform: international_polymarket
+market: BTC 5M UP/DOWN
+default_mode: PAPER
+target_mode: LIVE
+
+capital:
+  allocated_usd: null   # must be configured before trading
+
+risk:
+  risk_per_trade: 0.02            # max 2% planned loss per trade
+  daily_loss_limit: 0.04          # max 4% daily loss
+  max_consecutive_losses: 2
+  daily_profit_lock: null         # configurable
+  max_active_positions: 1
+  max_entries_per_market: 1
+
+entry:
+  strategy: dynamic
+  duration_seconds: 120
+  min_probability: 0.60
+  min_net_edge: 0.05
+  max_spread: 0.03
+  max_slippage: 0.03
+  evaluate_every_seconds: 1
+
+exit:
+  strategy: hybrid
+  take_profit_roi: 0.20
+  stop_loss_roi: 0.25
+  trailing_stop: false
+
+collateral: pUSD
+minimum_order_size: null   # read from market metadata, never hardcoded
+tick_size: null            # read from market metadata, never hardcoded
+
+fees:
+  read_from_metadata: true
+  taker_delay_ms: 250
+
+feeds:
+  primary: chainlink
+  secondary: chainlink_redundant
+  twap: chainlink_twap_60s
+  failover: BLOCK
+
+geo:
+  check_startup: true
+  check_before_live: true
+  periodic_seconds: 3600
+
+dashboard:
+  host: 127.0.0.1
+  port: 8000
+  bind_localhost_only: true
+  authentication_required: true
+  csrf_protection: true
+
+live_gate:
+  require_explicit_activation: true
+  require_geographic_eligibility: true
+  require_wallet_auth: true
+  require_signature_and_funder_verification: true
+  require_resolution_fingerprint_approval: true
+  require_resolution_replay_validation: true
+  min_replay_markets: 20
+
+heartbeat:
+  enabled: false
+  cadence_seconds: 5

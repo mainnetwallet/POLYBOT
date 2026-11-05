@@ -1,0 +1,37 @@
+/* POLYBOT dashboard styles */
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f5f5f7; color: #1a1a1a; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #111; color: #fff; }
+header .brand { font-weight: 700; font-size: 18px; letter-spacing: 2px; }
+header .meta { font-size: 13px; color: #bbb; }
+header a.btn-outline { color: #fff; text-decoration: none; border: 1px solid #555; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+header a.btn-outline:hover { background: #222; }
+
+nav.tabs { display: flex; gap: 0; border-bottom: 1px solid #ccc; background: #fff; }
+nav.tabs a.tab { padding: 10px 18px; text-decoration: none; color: #666; font-size: 14px; border-bottom: 2px solid transparent; }
+nav.tabs a.tab.active { color: #111; border-bottom-color: #111; font-weight: 600; }
+nav.tabs a.tab:hover { background: #f0f0f0; }
+
+.panel { padding: 20px; max-width: 1100px; margin: 0 auto; }
+.panel.hidden { display: none; }
+h3 { font-size: 15px; margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; }
+.card h3 { border: none; font-size: 14px; margin-bottom: 10px; }
+.kv { font-size: 13px; line-height: 1.7; }
+.kvrow { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dotted #eee; }
+.kvrow b { color: #333; }
+.kvrow span { color: #555; }
+
+.controls { font-size: 13px; line-height: 1.8; }
+.controls .liveconfirm { margin: 10px 0; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; }
+.controls input { padding: 6px; width: 120px; margin-left: 6px; }
+.controls button { padding: 6px 12px; margin-left: 6px; cursor: pointer; font-size: 12px; border-radius: 4px; border: 1px solid #999; background: #fff; }
+.controls button:hover { background: #e8e8e8; }
+button.btn-danger { background: #a33; color: #fff; border-color: #a33; }
+button.btn-danger:hover { background: #c44; }
+
+#markets-list, #positions-list { font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+th { background: #f0f0f0; }

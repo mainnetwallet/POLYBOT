@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polybot"
+version = "1.0.0"
+description = "Autonomous Polymarket BTC 5-Minute UP/DOWN Trading Agent"
+requires-python = ">=3.11"
+authors = [{ name = "POLYBOT Engineering" }]
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "pytest-cov>=6", "respx>=0.22"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["polybot*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
