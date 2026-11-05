@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import websockets
 
@@ -27,6 +27,21 @@ from polybot.decimal_math import dec, qshare
 from polybot.types import OrderBookSnapshot, FeedHealth
 
 logger = logging.getLogger("polybot.market_stream")
+
+
+def _ws_closed(ws) -> bool:
+    """True if the websocket is missing or not OPEN.
+
+    Works with websockets >= 14 (``ws.state``) and falls back to the legacy
+    ``ws.closed`` attribute for older versions.
+    """
+    if ws is None:
+        return True
+    state = getattr(ws, "state", None)
+    if state is not None:
+        return getattr(state, "name", "") != "OPEN"
+    return bool(getattr(ws, "closed", True))
+
 
 
 @dataclass
@@ -46,7 +61,7 @@ class AssetSubscription:
 class MarketStreamClient:
     def __init__(self, config: Optional[MarketStreamConfig] = None) -> None:
         self.config = config or MarketStreamConfig()
-        self._ws: Optional[websockets.WebSocketClientProtocol] = None
+        self._ws: Optional[Any] = None
         self._subscriptions: dict[str, AssetSubscription] = {}
         self._handlers: list[Callable[[dict], None]] = []
         self._lock = asyncio.Lock()
@@ -79,7 +94,7 @@ class MarketStreamClient:
                 return
             except asyncio.TimeoutError:
                 pass
-            if self._ws and not self._ws.closed:
+            if not _ws_closed(self._ws):
                 try:
                     await self._ws.send("PING")
                 except Exception:
@@ -118,7 +133,7 @@ class MarketStreamClient:
             self._reader_task.cancel()
         if self._ping_task:
             self._ping_task.cancel()
-        if self._ws and not self._ws.closed:
+        if not _ws_closed(self._ws):
             try:
                 await self._ws.close()
             except Exception:
@@ -134,13 +149,13 @@ class MarketStreamClient:
     async def subscribe(self, assets: list[AssetSubscription]) -> None:
         for a in assets:
             self._subscriptions[a.asset_id] = a
-        if self._ws and not self._ws.closed:
+        if not _ws_closed(self._ws):
             await self._send_subscription()
 
     async def unsubscribe(self, asset_ids: list[str]) -> None:
         for aid in asset_ids:
             self._subscriptions.pop(aid, None)
-        if self._ws and not self._ws.closed:
+        if not _ws_closed(self._ws):
             await self._send_subscription()
 
     async def _send_subscription(self) -> None:
@@ -258,4 +273,4 @@ class MarketStreamClient:
         return self._book_health.get(asset_id, FeedHealth.UNVERIFIED)
 
     def is_connected(self) -> bool:
-        return self._ws is not None and not self._ws.closed
+        return not _ws_closed(self._ws)

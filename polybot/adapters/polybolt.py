@@ -20,7 +20,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import websockets
 
@@ -30,6 +30,21 @@ from polybot.decimal_math import dec
 from polybot.types import BTCTick, TWAPTick, FeedHealth
 
 logger = logging.getLogger("polybot.polybolt")
+
+
+def _ws_closed(ws) -> bool:
+    """True if the websocket is missing or not OPEN.
+
+    Works with websockets >= 14 (``ws.state``) and falls back to the legacy
+    ``ws.closed`` attribute for older versions.
+    """
+    if ws is None:
+        return True
+    state = getattr(ws, "state", None)
+    if state is not None:
+        return getattr(state, "name", "") != "OPEN"
+    return bool(getattr(ws, "closed", True))
+
 
 
 @dataclass
@@ -56,7 +71,7 @@ class ChannelState:
 class PolyBoltClient:
     def __init__(self, config: PolyBoltConfig) -> None:
         self.config = config
-        self._ws: Optional[websockets.WebSocketClientProtocol] = None
+        self._ws: Optional[Any] = None
         self._authenticated = False
         self._channels: dict[str, ChannelState] = {}
         self._handlers: list[Callable[[dict], None]] = []
@@ -98,7 +113,7 @@ class PolyBoltClient:
         # Wait for authed confirmation.
         deadline = time.time() + self.config.subscribe_timeout
         while time.time() < deadline:
-            if self._ws is None or self._ws.closed:
+            if _ws_closed(self._ws):
                 raise RuntimeError("WebSocket closed during authentication")
             try:
                 message = await asyncio.wait_for(self._ws.recv(), timeout=2.0)
@@ -123,7 +138,7 @@ class PolyBoltClient:
                 return  # stopped
             except asyncio.TimeoutError:
                 pass
-            if self._ws and not self._ws.closed:
+            if not _ws_closed(self._ws):
                 try:
                     await self._ws.ping()
                 except Exception:
@@ -162,7 +177,7 @@ class PolyBoltClient:
             self._reader_task.cancel()
         if self._ping_task:
             self._ping_task.cancel()
-        if self._ws and not self._ws.closed:
+        if not _ws_closed(self._ws):
             try:
                 await self._ws.close()
             except Exception:
@@ -176,7 +191,7 @@ class PolyBoltClient:
     async def subscribe(self, channels: list[dict]) -> None:
         """channels: list of {"channel": str, "filter": dict}."""
         self._subscribed_channels = channels
-        if not self._authenticated or self._ws is None or self._ws.closed:
+        if not self._authenticated or _ws_closed(self._ws):
             return
         frame = {
             "op": "subscribe",
@@ -306,4 +321,4 @@ class PolyBoltClient:
         return state.health
 
     def is_healthy(self) -> bool:
-        return self._ws is not None and not self._ws.closed and self._authenticated
+        return not _ws_closed(self._ws) and self._authenticated
