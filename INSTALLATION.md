@@ -22,7 +22,7 @@ Later, to get new commits, see "Updating" in `README.md` (or run
 
 ```powershell
 cd POLYBOT
-setup.bat
+.\setup.bat
 ```
 
 This:
@@ -61,7 +61,7 @@ dashboard bind address). Dashboard is hard-bound to `127.0.0.1`.
 
 ```powershell
 cd POLYBOT
-start.bat
+.\start.bat
 ```
 
 POLYBOT starts in **PAPER** mode. Open `http://127.0.0.1:8000` and sign
@@ -79,7 +79,7 @@ in with the admin password.
 
 ```powershell
 cd POLYBOT
-stop.bat
+.\stop.bat
 ```
 
 Or press Ctrl+C in the `start.bat` window.

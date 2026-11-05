@@ -3,7 +3,7 @@ setlocal
 echo ==========================================
 echo POLYBOT - update
 echo ==========================================
-echo Stop POLYBOT first by running stop.bat.
+echo Stop POLYBOT first by running .\stop.bat.
 echo.
 where git >nul 2>&1
 if %errorlevel% neq 0 (
@@ -12,7 +12,7 @@ if %errorlevel% neq 0 (
   exit /b 1
 )
 if not exist venv (
-  echo Virtual environment not found. Run setup.bat first.
+  echo Virtual environment not found. Run .\setup.bat first.
   pause
   exit /b 1
 )
@@ -38,5 +38,5 @@ echo [4/4] Checking for new settings...
 echo Compare .env with .env.example and config\settings.yaml with
 echo config\settings.yaml.example and copy any new keys.
 echo.
-echo Update complete. Run start.bat to launch POLYBOT.
+echo Update complete. Run .\start.bat to launch POLYBOT.
 pause

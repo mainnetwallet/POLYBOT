@@ -101,11 +101,15 @@ Git asks. Never put the token inside a file in this repo.)
 
 ### 3. Install
 
+> **PowerShell users:** run scripts with `.\` in front (for example `.\setup.bat`).
+> PowerShell does not run scripts from the current folder without it. In
+> classic Command Prompt (cmd) you can type `setup.bat` directly.
+
 **Windows:**
 
 ```
 cd POLYBOT
-setup.bat
+.\setup.bat
 ```
 
 It creates `venv\`, installs
@@ -154,7 +158,7 @@ POLYBOT_DASHBOARD_ADMIN_PASSWORD=choose-a-strong-password
 
 ```
 cd POLYBOT
-start.bat
+.\start.bat
 ```
 
 **Linux / macOS:**
@@ -174,13 +178,13 @@ LIVE gate passes (see "Live gate" below).
 
 ### 6. Updating when new commits arrive
 
-Stop POLYBOT first (`Ctrl+C`, or run `cd POLYBOT` then `stop.bat`).
+Stop POLYBOT first (`Ctrl+C`, or run `cd POLYBOT` then `.\stop.bat`).
 
 **Windows:**
 
 ```
 cd POLYBOT
-update.bat
+.\update.bat
 ```
 
 It does the steps below for you.
@@ -195,7 +199,7 @@ venv\Scripts\pip install -r requirements.txt      # Windows
 python -c "from polybot.database import Database; Database('data/polybot.db').initialize()"
 ```
 
-Then start again (`cd POLYBOT` then `start.bat`, or `python -m polybot`).
+Then start again (`cd POLYBOT` then `.\start.bat`, or `python -m polybot`).
 
 After every update:
 
@@ -233,7 +237,8 @@ git reset --hard origin/master
 |---|---|
 | `python` not found | Install Python 3.11+ and tick "Add to PATH", then rerun setup |
 | `ModuleNotFoundError: polybot.data` | Your checkout is missing `polybot/data/`. Run `git pull` to get the latest code |
-| `Virtual environment not found` | Run `setup.bat` (or the Linux/macOS install steps) first |
+| `setup.bat is not recognized` (PowerShell) | Type `.\setup.bat` (with `.\`) or use cmd |
+| `Virtual environment not found` | Run `.\setup.bat` (or the Linux/macOS install steps) first |
 | Dashboard login fails | Check `POLYBOT_DASHBOARD_ADMIN_USER` / `_PASSWORD` in `.env`, restart |
 | Bot does not trade | Set `POLYBOT_CAPITAL_USD`; NO TRADE is normal when no valid edge exists |
 | Port 8000 in use | Change `POLYBOT_DASHBOARD_PORT` in `.env` |

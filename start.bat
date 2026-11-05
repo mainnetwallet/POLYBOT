@@ -4,7 +4,7 @@ echo ==========================================
 echo POLYBOT - starting
 echo ==========================================
 if not exist venv (
-  echo Virtual environment not found. Run setup.bat first.
+  echo Virtual environment not found. Run .\setup.bat first.
   pause
   exit /b 1
 )

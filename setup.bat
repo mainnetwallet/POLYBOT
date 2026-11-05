@@ -71,7 +71,7 @@ echo ==========================================
 echo 1. Edit .env with your wallet address and (optionally) private key.
 echo 2. Set POLYBOT_CAPITAL_USD in .env before trading.
 echo 3. Review config/settings.yaml.
-echo 4. Run start.bat to launch POLYBOT (PAPER mode by default).
+echo 4. Run .\start.bat to launch POLYBOT (PAPER mode by default).
 echo 5. Open http://127.0.0.1:8000 for the dashboard.
 echo.
 echo WARNING: LIVE trading is locked until you explicitly activate it in the

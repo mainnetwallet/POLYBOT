@@ -56,4 +56,4 @@ Mirrors the .env values under `capital`, `risk`, `entry`, `exit`,
 ## How to change a value
 
 Edit `.env` or `config/settings.yaml`, then restart POLYBOT
-(`stop.bat` then `start.bat`). Changes take effect on next start.
+(`stop.bat` then `.\start.bat`). Changes take effect on next start.
