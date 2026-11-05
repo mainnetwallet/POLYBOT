@@ -273,7 +273,7 @@ class App:
             logger.exception("Market discovery refresh failed")
 
     async def _do_refresh_discovery(self) -> None:
-        result = await self.discovery.refresh("BTC 5M")
+        result = await self.discovery.refresh("BTC 5M", end_within_minutes=60)
         for meta in result.btc_5m_markets:
             ok, reasons = await self.discovery.validate(meta)
             if ok:

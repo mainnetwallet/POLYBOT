@@ -46,10 +46,13 @@ class MarketDiscovery:
         self.adapter = adapter
         self._known_market_ids: set[str] = set()
 
-    async def refresh(self, query: str = "BTC") -> DiscoveryResult:
+    async def refresh(
+        self, query: str = "BTC", end_within_minutes: Optional[int] = None
+    ) -> DiscoveryResult:
         result = DiscoveryResult(scanned_at=utc_now())
         try:
-            markets = await self.adapter.discover_markets(query=query, closed=False)
+            kwargs = {"end_within_minutes": end_within_minutes} if end_within_minutes else {}
+            markets = await self.adapter.discover_markets(query=query, closed=False, **kwargs)
         except Exception as exc:  # pragma: no cover - network
             logger.exception("Discovery failed")
             result.errors.append(str(exc))

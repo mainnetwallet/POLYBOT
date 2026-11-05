@@ -29,7 +29,10 @@ class ExchangeAdapter(ABC):
 
     @abstractmethod
     async def discover_markets(
-        self, query: str = "BTC", closed: bool = False
+        self,
+        query: str = "BTC",
+        closed: bool = False,
+        end_within_minutes: Optional[int] = None,
     ) -> list[MarketMetadata]:
         """Find active markets matching a query (e.g. BTC 5M)."""
 

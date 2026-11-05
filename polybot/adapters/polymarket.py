@@ -14,7 +14,10 @@ from __future__ import annotations
 
 import re
 import asyncio
+import logging
 import os
+import time
+from datetime import timedelta
 from decimal import Decimal
 from typing import Optional
 
@@ -45,6 +48,8 @@ from polybot.types import (
     Position,
 )
 
+
+logger = logging.getLogger("polybot.polymarket")
 
 class PolymarketAdapterError(RuntimeError):
     """Raised when the Polymarket adapter cannot complete an operation."""
@@ -158,7 +163,10 @@ class PolymarketAdapter(ExchangeAdapter):
     # Market discovery
     # ------------------------------------------------------------------ #
     async def discover_markets(
-        self, query: str = "BTC", closed: bool = False
+        self,
+        query: str = "BTC",
+        closed: bool = False,
+        end_within_minutes: Optional[int] = None,
     ) -> list[MarketMetadata]:
         """List active markets matching ``query``.
 
@@ -171,9 +179,21 @@ class PolymarketAdapter(ExchangeAdapter):
         # Match on the query's words (slugs use hyphens, e.g. "btc-updown-5m-..."),
         # not on the literal phrase "btc 5m".
         query_words = [w for w in re.sub(r"[^a-z0-9]+", " ", query.lower()).split() if w]
-        pages = client.list_markets(closed=closed, page_size=100)
+        # Short-lived markets (e.g. BTC 5M) end soon after they open, so asking
+        # the server only for markets ending in the next N minutes avoids paging
+        # through every open market on Polymarket.
+        filters: dict = {}
+        if end_within_minutes:
+            now = utc_now()
+            filters["end_date_min"] = now
+            filters["end_date_max"] = now + timedelta(minutes=end_within_minutes)
+        pages = client.list_markets(closed=closed, page_size=100, **filters)
+        started = time.monotonic()
+        n_pages = n_scanned = 0
         try:
             async for page in pages:
+                n_pages += 1
+                n_scanned += len(page.items)
                 for market in page.items:
                     text = " ".join(
                         str(getattr(market, attr, "") or "")
@@ -187,6 +207,11 @@ class PolymarketAdapter(ExchangeAdapter):
                         results.append(meta)
         except Exception as exc:  # pragma: no cover - network
             raise PolymarketAdapterError(f"Market discovery failed: {exc}") from exc
+        logger.info(
+            "Discovery scan: %d pages, %d markets scanned, %d matched %r in %.1fs%s",
+            n_pages, n_scanned, len(results), query, time.monotonic() - started,
+            f" (ending within {end_within_minutes} min)" if end_within_minutes else "",
+        )
         return results
 
     async def get_market_metadata(self, market_id: str) -> Optional[MarketMetadata]:

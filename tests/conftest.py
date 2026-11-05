@@ -114,7 +114,7 @@ class MockAdapter(ExchangeAdapter):
     async def is_connected(self):
         return self.connected
 
-    async def discover_markets(self, query="BTC", closed=False):
+    async def discover_markets(self, query="BTC", closed=False, end_within_minutes=None):
         return [_make_metadata(MARKET_VERSION_V2), _make_metadata(MARKET_VERSION_V1)]
 
     async def get_market_metadata(self, market_id):
