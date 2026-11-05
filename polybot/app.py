@@ -93,6 +93,7 @@ class App:
         self._open_orders: list = []
         self._ready = False
         self._loop_task: Optional[asyncio.Task] = None
+        self._discovery_task: Optional[asyncio.Task] = None
         self._evaluation_count = 0
         self._no_trade_reasons: dict[str, str] = {}
         self._validation_evidence = False
@@ -195,6 +196,8 @@ class App:
         self.shutdown_requested = True
         if self._loop_task:
             self._loop_task.cancel()
+        if self._discovery_task:
+            self._discovery_task.cancel()
         if self.heartbeat:
             await self.heartbeat.stop()
         if self.feeds:
@@ -228,8 +231,12 @@ class App:
             return
 
         # 1. Market discovery (periodic).
-        if self._evaluation_count % 60 == 0:
-            await self._refresh_discovery()
+        # Runs in the background: a full scan pages through every open market
+        # and can take minutes, which must not stall exits or dashboard state.
+        if self._evaluation_count % 60 == 0 and (
+            self._discovery_task is None or self._discovery_task.done()
+        ):
+            self._discovery_task = asyncio.create_task(self._refresh_discovery())
         self._evaluation_count += 1
 
         # 2. Update MTF / regime from latest BTC tick.
@@ -258,6 +265,14 @@ class App:
     async def _refresh_discovery(self) -> None:
         if not self.adapter:
             return
+        try:
+            await self._do_refresh_discovery()
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Market discovery refresh failed")
+
+    async def _do_refresh_discovery(self) -> None:
         result = await self.discovery.refresh("BTC 5M")
         for meta in result.btc_5m_markets:
             ok, reasons = await self.discovery.validate(meta)
@@ -466,6 +481,12 @@ class App:
         }
 
     def dashboard_state(self) -> dict:
+        # Always build from current state so the dashboard works while the
+        # trading loop is busy (or hasn't completed its first tick yet).
+        try:
+            self._update_dashboard_state()
+        except Exception:
+            logger.exception("Dashboard state refresh failed")
         return dict(self._last_dashboard_state)
 
     @property

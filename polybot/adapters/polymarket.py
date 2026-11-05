@@ -12,6 +12,7 @@ Unknown versions are rejected.
 
 from __future__ import annotations
 
+import re
 import asyncio
 import os
 from decimal import Decimal
@@ -167,6 +168,9 @@ class PolymarketAdapter(ExchangeAdapter):
         """
         client = self._require_public()
         results: list[MarketMetadata] = []
+        # Match on the query's words (slugs use hyphens, e.g. "btc-updown-5m-..."),
+        # not on the literal phrase "btc 5m".
+        query_words = [w for w in re.sub(r"[^a-z0-9]+", " ", query.lower()).split() if w]
         pages = client.list_markets(closed=closed, page_size=100)
         try:
             async for page in pages:
@@ -175,7 +179,8 @@ class PolymarketAdapter(ExchangeAdapter):
                         str(getattr(market, attr, "") or "")
                         for attr in ("question", "slug", "id")
                     ).lower()
-                    if query.lower() not in text:
+                    text = re.sub(r"[^a-z0-9]+", " ", text)
+                    if not all(w in text for w in query_words):
                         continue
                     meta = self._market_to_metadata(market)
                     if meta is not None:
