@@ -39,6 +39,7 @@ from polybot.execution.paper import PaperExecutor
 from polybot.recovery.journal import RecoveryManager, RecoveryState
 from polybot.validation.live_gate import LiveGate
 from polybot.validation.geo import GeoChecker
+from polybot.types import OrderType, TradeSide
 from polybot.constants import (
     DEFAULT_ENTRY_WINDOW_SECONDS,
     MODE,
@@ -379,7 +380,6 @@ class App:
                 return
 
         # Journal + execute.
-        from polybot.types import OrderType, TradeSide
         key = await self.order_manager.journal_intent(
             market_id=target.market_id,
             condition_id=target.condition_id,
