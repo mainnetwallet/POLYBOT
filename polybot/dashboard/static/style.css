@@ -4,8 +4,8 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; marg
 header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #111; color: #fff; }
 header .brand { font-weight: 700; font-size: 18px; letter-spacing: 2px; }
 header .meta { font-size: 13px; color: #bbb; }
-header a.btn-outline { color: #fff; text-decoration: none; border: 1px solid #555; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
-header a.btn-outline:hover { background: #222; }
+header .btn-outline { background: transparent; cursor: pointer; font-family: inherit; color: #fff; text-decoration: none; border: 1px solid #555; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+header .btn-outline:hover { background: #222; }
 
 nav.tabs { display: flex; gap: 0; border-bottom: 1px solid #ccc; background: #fff; }
 nav.tabs a.tab { padding: 10px 18px; text-decoration: none; color: #666; font-size: 14px; border-bottom: 2px solid transparent; }
@@ -35,3 +35,6 @@ button.btn-danger:hover { background: #c44; }
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
 th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
 th { background: #f0f0f0; }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+table.data th, table.data td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e3e3e3; }
+table.data th { background: #fafafa; }

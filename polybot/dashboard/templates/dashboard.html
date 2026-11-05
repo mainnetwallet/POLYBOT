@@ -10,7 +10,7 @@
 <header>
   <div class="brand">POLYBOT</div>
   <div class="meta" id="meta">mode: <span id="mode">—</span> &bull; ready: <span id="ready">—</span></div>
-  <a href="/logout" class="btn-outline">Sign out</a>
+  <form method="post" action="/logout" style="margin:0"><button type="submit" class="btn-outline">Sign out</button></form>
 </header>
 
 <nav class="tabs">
@@ -71,12 +71,27 @@
 </section>
 
 <script>
-const csrf = document.currentScript ? null : null;
-let csrfToken = "{% csrf %}";
+const csrfToken = {{ csrf | tojson }};
+const esc = (v) => String(v ?? "—").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function getJSON(url){
+  const res = await fetch(url);
+  if(res.status === 401){ window.location = "/login"; throw new Error("session expired"); }
+  return res.json();
+}
+function table(rows, cols){
+  if(!rows.length) return "<p>none</p>";
+  const head = cols.map(c=>`<th>${esc(c)}</th>`).join("");
+  const body = rows.map(r=>"<tr>"+cols.map(c=>`<td>${esc(r[c])}</td>`).join("")+"</tr>").join("");
+  return `<table class="data"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
 async function loadState(){
-  const res = await fetch("/api/state", {headers:{"X-CSRF-Token": csrfToken}});
-  const s = await res.json();
-  render(s);
+  try{
+    render(await getJSON("/api/state"));
+    const [m, p, h] = await Promise.all([getJSON("/api/markets"), getJSON("/api/positions"), getJSON("/api/heartbeat")]);
+    document.getElementById("markets-list").innerHTML = table(m.markets||[], ["slug","state","accepting_orders","best_bid","best_ask","spread","liquidity"]);
+    document.getElementById("positions-list").innerHTML = table(p.positions||[], ["market_id","side","entry_price","quantity_shares","cost_usd","exit_state"]);
+    document.getElementById("system-detail").innerHTML = kv(Object.entries(h));
+  }catch(e){ console.error(e); }
 }
 function render(s){
   document.getElementById("mode").textContent = s.mode || "—";
@@ -101,11 +116,11 @@ function render(s){
   document.getElementById("risk-detail").innerHTML = kv(Object.entries(r).map(([k,v])=>[k,v]));
 }
 function kv(pairs){
-  return pairs.map(([k,v])=>`<div class="kvrow"><b>${k}:</b> <span>${v}</span></div>`).join("");
+  return pairs.map(([k,v])=>`<div class="kvrow"><b>${esc(k)}:</b> <span>${esc(v)}</span></div>`).join("");
 }
 function controlsHtml(lg){
   let html = `<p>LIVE gate: <b>${lg.passed ? "passed" : "failed"}</b></p>`;
-  if(lg.reason) html += `<p style="color:#a33;font-size:12px">${lg.reason}</p>`;
+  if(lg.reason) html += `<p style="color:#a33;font-size:12px">${esc(lg.reason)}</p>`;
   html += `<div class="liveconfirm" id="liveconfirm">
     <label>Type <b>LIVE</b> to activate real-money trading:</label>
     <input id="liveinput" type="text" maxlength="4">

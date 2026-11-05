@@ -14,6 +14,7 @@ import os
 import secrets
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, Form, Cookie
@@ -54,7 +55,7 @@ def create_app(app: App) -> FastAPI:
     # Sessions: token -> {created_at, csrf, admin}
     sessions: dict[str, dict] = {}
 
-    templates = Jinja2Templates(directory="polybot/dashboard/templates")
+    templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent / "templates"))
 
     # ------------------------------------------------------------------ #
     # Helpers
@@ -100,17 +101,33 @@ def create_app(app: App) -> FastAPI:
     # ------------------------------------------------------------------ #
     # Routes
     # ------------------------------------------------------------------ #
+    @app_fastapi.exception_handler(HTTPException)
+    async def _http_exception_handler(request: Request, exc: HTTPException):
+        # Browser page requests without a valid session go to the login page;
+        # API calls keep getting a JSON 401/403.
+        if exc.status_code == 401 and not request.url.path.startswith("/api/"):
+            return RedirectResponse(url="/login", status_code=302)
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+    @app_fastapi.get("/", include_in_schema=False)
+    async def root(request: Request):
+        if _session_valid(request.cookies.get("session")):
+            return RedirectResponse(url="/dashboard", status_code=302)
+        return RedirectResponse(url="/login", status_code=302)
+
     @app_fastapi.get("/login", response_class=HTMLResponse)
     async def login_page(request: Request):
         token = request.cookies.get("session")
         if _session_valid(token):
             return RedirectResponse(url="/dashboard")
-        return templates.TemplateResponse("login.html", {"request": request})
+        return templates.TemplateResponse(request, "login.html", {"error": None})
 
     @app_fastapi.post("/login")
     async def login(request: Request, password: str = Form(...)):
         if not _verify_password(password, password_hash):
-            raise HTTPException(status_code=401, detail="invalid credentials")
+            return templates.TemplateResponse(
+                request, "login.html", {"error": "Invalid password"}, status_code=401
+            )
         token = _new_session()
         resp = RedirectResponse(url="/dashboard", status_code=302)
         resp.set_cookie(
@@ -134,8 +151,7 @@ def create_app(app: App) -> FastAPI:
     @app_fastapi.get("/dashboard", response_class=HTMLResponse)
     async def dashboard_page(request: Request, token: str = Depends(_require_session)):
         return templates.TemplateResponse(
-            "dashboard.html",
-            {"request": request, "csrf": sessions[token]["csrf"]},
+            request, "dashboard.html", {"csrf": sessions[token]["csrf"]}
         )
 
     # -- API -----------------------------------------------------------
