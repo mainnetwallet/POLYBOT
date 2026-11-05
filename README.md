@@ -46,6 +46,7 @@ POLYBOT/
 ├── setup.bat          # Windows: venv, deps, config, database
 ├── start.bat          # Windows: launch POLYBOT (PAPER by default)
 ├── stop.bat           # Windows: shutdown POLYBOT
+├── update.bat         # Windows: pull latest commits + refresh deps/DB
 ├── pyproject.toml
 ├── requirements.txt   # pinned dependencies (polymarket-client==0.16.0)
 ├── .env.example       # copy to .env and configure (never commit .env)
@@ -79,20 +80,140 @@ POLYBOT/
 └── tests/             # automated test suite (mocked APIs, no real funds)
 ```
 
-## Quick start (Windows)
+## Getting started
 
-1. `setup.bat` — creates the venv, installs pinned dependencies, copies
-   `.env.example` → `.env` and `config/settings.yaml.example`, and
-   initializes the SQLite WAL database.
-2. Edit `.env` — set `POLYMARKET_WALLET_ADDRESS` and
-   `POLYBOT_CAPITAL_USD` (capital remains unset until you configure it).
-3. `start.bat` — launches POLYBOT in **PAPER** mode. The dashboard is at
-   `http://127.0.0.1:8000`.
-4. Sign in with the dashboard admin password (set
-   `POLYBOT_DASHBOARD_ADMIN_PASSWORD` in `.env`).
-5. Review PAPER behavior. When ready and the LIVE gate passes, type
-   `LIVE` in the dashboard and activate LIVE.
-6. `stop.bat` — shuts POLYBOT down.
+### 1. Requirements
+
+- Python **3.11+** (3.11.9 tested)
+- Git
+- Internet access (dependencies + Polymarket APIs)
+- PAPER mode needs no funds. LIVE needs a Polymarket wallet with pUSD.
+
+### 2. Get the code
+
+```
+git clone https://github.com/mainnetwallet/POLYBOT.git
+cd POLYBOT
+```
+
+(The repo is private: use your GitHub login or a personal access token when
+Git asks. Never put the token inside a file in this repo.)
+
+### 3. Install
+
+**Windows:** run `setup.bat`. It creates `venv\`, installs
+`requirements.txt`, creates `.env` and `config\settings.yaml` from the
+examples, creates `data\` and `logs\`, and initializes the database.
+
+**Linux / macOS:**
+
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+cp config/settings.yaml.example config/settings.yaml
+mkdir -p data logs
+python -c "from polybot.database import Database; Database('data/polybot.db').initialize()"
+```
+
+### 4. Environment setup (`.env`)
+
+Open `.env` and fill in at least:
+
+```ini
+POLYBOT_MODE=PAPER
+POLYMARKET_WALLET_ADDRESS=0xYourWalletAddress
+POLYBOT_CAPITAL_USD=1000
+POLYBOT_DASHBOARD_ADMIN_USER=admin
+POLYBOT_DASHBOARD_ADMIN_PASSWORD=choose-a-strong-password
+```
+
+- `POLYBOT_CAPITAL_USD` must be set, otherwise the bot will not trade.
+- If `POLYBOT_DASHBOARD_ADMIN_PASSWORD` is empty the dashboard falls back to
+  the weak default `changeme`. Always set your own.
+- LIVE-only values (leave empty for PAPER): `POLYMARKET_PRIVATE_KEY`,
+  `POLYMARKET_CLOB_API_KEY`, `POLYMARKET_CLOB_API_SECRET`,
+  `POLYMARKET_CLOB_API_PASSPHRASE`. Create CLOB keys at polymarket.com ->
+  Settings -> API Keys. Use a dedicated trading wallet.
+- `.env` is git-ignored. Never commit it or share it.
+- Full variable list: `CONFIGURATION.md`. Trading parameters live in
+  `config/settings.yaml`.
+
+### 5. Run
+
+**Windows:** `start.bat`
+
+**Linux / macOS:**
+
+```
+source venv/bin/activate
+python -m polybot
+```
+
+POLYBOT starts in **PAPER** mode. Open `http://127.0.0.1:8000`, sign in with
+the admin user/password from `.env`, and watch PAPER behavior. Stop with
+`Ctrl+C` or `stop.bat`.
+
+LIVE stays locked until you type `LIVE` in the dashboard and the 23-condition
+LIVE gate passes (see "Live gate" below).
+
+### 6. Updating when new commits arrive
+
+Stop POLYBOT first (`stop.bat` or `Ctrl+C`).
+
+**Windows:** run `update.bat`. It does the steps below for you.
+
+**Manual (any OS):**
+
+```
+git pull --ff-only
+venv\Scripts\pip install -r requirements.txt      # Windows
+# source venv/bin/activate && pip install -r requirements.txt   # Linux/macOS
+python -c "from polybot.database import Database; Database('data/polybot.db').initialize()"
+```
+
+Then start again (`start.bat` / `python -m polybot`).
+
+After every update:
+
+- Your `.env`, `config/settings.yaml`, `data/` and `logs/` are git-ignored, so
+  `git pull` never overwrites them.
+- New settings may have been added. Compare your files with the examples and
+  copy over any new keys:
+  - `git diff HEAD@{1} HEAD -- .env.example config/settings.yaml.example`
+- Read the new commits: `git log --oneline -10` and the docs they changed.
+- Run the tests: `python -m pytest tests/` (use `venv\Scripts\python` on
+  Windows).
+- Back up `data/polybot.db` before updating if you have PAPER/LIVE history.
+
+If `git pull --ff-only` fails because of your local edits:
+
+```
+git stash
+git pull --ff-only
+git stash pop
+```
+
+To discard local code changes and match the remote exactly (this deletes your
+uncommitted code edits, but not `.env` or `data/`):
+
+```
+git fetch origin
+git reset --hard origin/master
+```
+
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `python` not found | Install Python 3.11+ and tick "Add to PATH", then rerun setup |
+| `ModuleNotFoundError: polybot.data` | Your checkout is missing `polybot/data/`. Run `git pull` to get the latest code |
+| `Virtual environment not found` | Run `setup.bat` (or the Linux/macOS install steps) first |
+| Dashboard login fails | Check `POLYBOT_DASHBOARD_ADMIN_USER` / `_PASSWORD` in `.env`, restart |
+| Bot does not trade | Set `POLYBOT_CAPITAL_USD`; NO TRADE is normal when no valid edge exists |
+| Port 8000 in use | Change `POLYBOT_DASHBOARD_PORT` in `.env` |
+| Dependency errors after update | Rerun `pip install -r requirements.txt` inside the venv |
 
 ## Security
 

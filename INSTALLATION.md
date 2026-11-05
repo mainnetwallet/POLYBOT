@@ -8,15 +8,15 @@
 - A Polymarket account (International platform) with a wallet and pUSD
   (for LIVE; PAPER works without funds)
 
-## Step 1 — Clone / create the project
-
-POLYBOT is the contents of this directory. No git repository is required,
-but you may initialize one:
+## Step 1 — Get the code
 
 ```powershell
-cd C:\Users\mainw\POLYBOT
-git init
+git clone https://github.com/mainnetwallet/POLYBOT.git
+cd POLYBOT
 ```
+
+Later, to get new commits, see "Updating" in `README.md` (or run
+`update.bat`).
 
 ## Step 2 — Run setup
 

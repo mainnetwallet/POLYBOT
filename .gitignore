@@ -41,9 +41,13 @@ build/
 *.egg-info/
 .eggs/
 
-# Data / logs (local runtime artifacts)
-data/
-logs/
+# Data / logs (local runtime artifacts, repo root only)
+/data/
+/logs/
+*.log
+
+# Local config copy (create from settings.yaml.example)
+config/settings.yaml
 *.db
 *.db-shm
 *.db-wal
