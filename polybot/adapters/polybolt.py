@@ -264,7 +264,9 @@ class PolyBoltClient:
             if tick is not None:
                 for handler in self._handlers:
                     try:
-                        handler({"tick": tick, "channel": channel, "raw": data})
+                        result = handler({"tick": tick, "channel": channel, "raw": data})
+                        if asyncio.iscoroutine(result):
+                            await result
                     except Exception:  # pragma: no cover
                         logger.exception("Handler error")
 

@@ -34,6 +34,12 @@ def parse_iso(value) -> Optional[datetime]:
         return None
     if isinstance(value, datetime):
         dt = value
+    elif isinstance(value, (int, float)) or str(value).strip().lstrip("-").replace(".", "", 1).isdigit():
+        # Epoch timestamp: milliseconds (13 digits) or seconds (10 digits).
+        num = float(value)
+        if abs(num) >= 1e11:
+            num /= 1000.0
+        dt = datetime.fromtimestamp(num, tz=timezone.utc)
     else:
         dt = datetime.fromisoformat(str(value))
     if dt.tzinfo is None:
