@@ -101,13 +101,21 @@ Git asks. Never put the token inside a file in this repo.)
 
 ### 3. Install
 
-**Windows:** run `setup.bat`. It creates `venv\`, installs
+**Windows:**
+
+```
+cd POLYBOT
+setup.bat
+```
+
+It creates `venv\`, installs
 `requirements.txt`, creates `.env` and `config\settings.yaml` from the
 examples, creates `data\` and `logs\`, and initializes the database.
 
 **Linux / macOS:**
 
 ```
+cd POLYBOT
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -142,11 +150,17 @@ POLYBOT_DASHBOARD_ADMIN_PASSWORD=choose-a-strong-password
 
 ### 5. Run
 
-**Windows:** `start.bat`
+**Windows:**
+
+```
+cd POLYBOT
+start.bat
+```
 
 **Linux / macOS:**
 
 ```
+cd POLYBOT
 source venv/bin/activate
 python -m polybot
 ```
@@ -160,20 +174,28 @@ LIVE gate passes (see "Live gate" below).
 
 ### 6. Updating when new commits arrive
 
-Stop POLYBOT first (`stop.bat` or `Ctrl+C`).
+Stop POLYBOT first (`Ctrl+C`, or run `cd POLYBOT` then `stop.bat`).
 
-**Windows:** run `update.bat`. It does the steps below for you.
+**Windows:**
+
+```
+cd POLYBOT
+update.bat
+```
+
+It does the steps below for you.
 
 **Manual (any OS):**
 
 ```
+cd POLYBOT
 git pull --ff-only
 venv\Scripts\pip install -r requirements.txt      # Windows
 # source venv/bin/activate && pip install -r requirements.txt   # Linux/macOS
 python -c "from polybot.database import Database; Database('data/polybot.db').initialize()"
 ```
 
-Then start again (`start.bat` / `python -m polybot`).
+Then start again (`cd POLYBOT` then `start.bat`, or `python -m polybot`).
 
 After every update:
 
@@ -183,13 +205,14 @@ After every update:
   copy over any new keys:
   - `git diff HEAD@{1} HEAD -- .env.example config/settings.yaml.example`
 - Read the new commits: `git log --oneline -10` and the docs they changed.
-- Run the tests: `python -m pytest tests/` (use `venv\Scripts\python` on
-  Windows).
+- Run the tests (from inside `POLYBOT`): `python -m pytest tests/` (use
+  `venv\Scripts\python` on Windows).
 - Back up `data/polybot.db` before updating if you have PAPER/LIVE history.
 
 If `git pull --ff-only` fails because of your local edits:
 
 ```
+cd POLYBOT
 git stash
 git pull --ff-only
 git stash pop
@@ -199,6 +222,7 @@ To discard local code changes and match the remote exactly (this deletes your
 uncommitted code edits, but not `.env` or `data/`):
 
 ```
+cd POLYBOT
 git fetch origin
 git reset --hard origin/master
 ```
@@ -272,6 +296,7 @@ failure leaves LIVE disabled with an exact reason.
 Tests use mocked APIs only — never real funds. Run:
 
 ```
+cd POLYBOT
 venv\Scripts\python -m pytest tests/
 ```
 

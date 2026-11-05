@@ -21,6 +21,7 @@ Later, to get new commits, see "Updating" in `README.md` (or run
 ## Step 2 — Run setup
 
 ```powershell
+cd POLYBOT
 setup.bat
 ```
 
@@ -59,6 +60,7 @@ dashboard bind address). Dashboard is hard-bound to `127.0.0.1`.
 ## Step 4 — Launch
 
 ```powershell
+cd POLYBOT
 start.bat
 ```
 
@@ -68,7 +70,7 @@ in with the admin password.
 ## Step 5 — Validate before LIVE
 
 - Run PAPER and review the dashboard, logs and test results.
-- Run the automated suite: `venv\Scripts\python -m pytest tests/`
+- Run the automated suite (after `cd POLYBOT`): `venv\Scripts\python -m pytest tests/`
 - Review `TEST_RESULTS.md` and `LIMITATIONS.md`.
 - Only when the LIVE gate passes and you have typed `LIVE` to confirm
   should you consider activating LIVE.
@@ -76,6 +78,7 @@ in with the admin password.
 ## Shutdown
 
 ```powershell
+cd POLYBOT
 stop.bat
 ```
 

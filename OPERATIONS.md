@@ -2,7 +2,7 @@
 
 ## Normal operation
 
-1. `start.bat` → POLYBOT launches in PAPER mode.
+1. `cd POLYBOT` then `start.bat` → POLYBOT launches in PAPER mode.
 2. Open `http://127.0.0.1:8000`, sign in.
 3. Monitor the dashboard: Account, Market, Strategy, Position, System,
    Controls panels.
@@ -55,4 +55,4 @@ No new entries during recovery.
 
 - Periodically back up `data/polybot.db` and `data/analytics/`.
 - Rotate logs as needed.
-- Re-run `setup.bat` to refresh dependencies after dependency changes.
+- Run `cd POLYBOT` then `setup.bat` again to refresh dependencies after dependency changes.
